@@ -4,7 +4,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.log4j.Logger;
 import org.apache.log4j.xml.DOMConfigurator;
@@ -15,7 +14,7 @@ public class MetaSpaceObserver {
 	
 	Logger l = Logger.getLogger("generation.gc");
 	
-	List<String> al = new ArrayList<>();
+	List<String> metaspace = new ArrayList<>();
 
 	public MetaSpaceObserver(){
 		DOMConfigurator.configure("log4j.xml");
@@ -48,11 +47,29 @@ public class MetaSpaceObserver {
 			@Override
 			public void onNext(Object capacity) {
 	            l.debug("onNext[" + capacity + " ]");
-				al.add((String) capacity);
+	            metaspace.add((String) capacity);
 			}
         });
     }
     
+    public long getInit(){
+    	return Long.parseLong(metaspace.get(0));
+    }
+
+    public long getCommitted(){
+    	return Long.parseLong(metaspace.get(1));
+    	
+    }
+
+    public long getUsed(){
+    	return Long.parseLong(metaspace.get(2));
+    }
+
+    public long getMax(){
+    	return Long.parseLong(metaspace.get(3));
+    	
+    }
+
     private String getStackTrace(Throwable t){
     	StringWriter sw = new StringWriter();
     	PrintWriter pw = new PrintWriter(sw);

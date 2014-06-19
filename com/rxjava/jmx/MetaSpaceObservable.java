@@ -1,5 +1,7 @@
 package com.rxjava.jmx;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.management.MemoryPoolMXBean;
 import java.lang.management.MemoryUsage;
 import java.util.Arrays;
@@ -37,6 +39,8 @@ public class MetaSpaceObservable {
    	
     	Observable<Long> init = null;
     	Observable<Long> committed = null;
+        Observable<Long> max = null;
+        Observable<Long> used = null;
     	
             Future<Optional<MemoryPoolMXBean>> memoryPool =
                 es.submit(  new Callable<Optional<MemoryPoolMXBean>>(){
@@ -53,21 +57,21 @@ public class MetaSpaceObservable {
 				mpmxbOpt = memoryPool.get();
 			} catch (InterruptedException | ExecutionException e) {
 				// TODO Auto-generated catch block
-				e.printStackTrace();
+				l.debug(getStackTrace(e));
 			}
 	        if(mpmxbOpt.isPresent()){
 	        	MemoryPoolMXBean mpmx = mpmxbOpt.get();
 	        	MemoryUsage mu = mpmx.getUsage();
 	        	init = Observable.from(mu.getInit());
 	            committed = Observable.from(mu.getCommitted());
-        		l.debug("Committed[" + committed +"] init[" + init + "]");
+	            used = Observable.from(mu.getUsed());
+	            max = Observable.from(mu.getMax());
 	        }
 
-    return Observable.merge(Observable.zip(init, committed, (i,c) -> {
-        List<Long> results = Arrays.asList(i,c);
+    return Observable.merge(Observable.zip(init, committed, used, max,(i,c,u,m) -> {
+        List<Long> results = Arrays.asList(i,c,u,m);
         return Observable.create((Subscriber<? super String> subscriber) -> {
             for(Long lv : results){
-            	subscriber.onNext(String.valueOf(lv));
         		l.debug(String.valueOf(lv.longValue()));
             	subscriber.onNext(String.valueOf(lv.longValue()));
             }
@@ -75,6 +79,14 @@ public class MetaSpaceObservable {
         });
     }));
 
+    }
+
+    private String getStackTrace(Throwable t){
+    	StringWriter sw = new StringWriter();
+    	PrintWriter pw = new PrintWriter(sw);
+    	t.printStackTrace(pw);
+    	return sw.toString();
+    	
     }
 
 }
