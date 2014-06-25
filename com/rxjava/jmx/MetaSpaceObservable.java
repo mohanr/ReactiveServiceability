@@ -47,10 +47,9 @@ public class MetaSpaceObservable {
                 @Override
                 public Optional<MemoryPoolMXBean> call()
                 {
-                	return msp.getMemoryPool();
+                	return msp.getMemoryPool();//Don't think repeated calls are needed
                 }
                 } );
-	            es.shutdown();
 	            
 	        Optional<MemoryPoolMXBean> mpmxbOpt = null;
 			try {
@@ -58,8 +57,11 @@ public class MetaSpaceObservable {
 			} catch (InterruptedException | ExecutionException e) {
 				// TODO Auto-generated catch block
 				l.debug(getStackTrace(e));
+			}finally{
+	            es.shutdown();
 			}
-	        if(mpmxbOpt.isPresent()){
+			
+	        if(mpmxbOpt.isPresent()){//Repeated calls are needed here
 	        	MemoryPoolMXBean mpmx = mpmxbOpt.get();
 	        	MemoryUsage mu = mpmx.getUsage();
 	        	init = Observable.from(mu.getInit());
