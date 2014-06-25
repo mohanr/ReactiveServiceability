@@ -1,4 +1,6 @@
 library(shiny)
+require(rCharts)
+library(knitr)
 
 shinyUI(fluidPage(theme = "/shared/bootstrap/css/bootstrap.css",
 
@@ -7,14 +9,18 @@ shinyUI(fluidPage(theme = "/shared/bootstrap/css/bootstrap.css",
   navlistPanel(
     "Garbage Collection",
     tabPanel("Generations",
-      h3("Heap")
+      h3("Heap"),
+    tabsetPanel(
+        tabPanel("Metaspace",showOutput("metaspace", "Morris")),
+        tabPanel("YoungGen",showOutput("younggen", "Morris"))
+    )
     ),
     tabPanel("Threads",
       h3("Threads and Locks")
     ),
     "-----",
     tabPanel("JIT",
-      h3("Methods")
+      h3("Methods"),
+      showOutput("chart2", "nvd3")
     )
-  )
-))
+)))
