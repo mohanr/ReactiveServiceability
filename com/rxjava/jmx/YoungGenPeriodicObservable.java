@@ -16,6 +16,7 @@ import rx.Scheduler.Worker;
 import rx.functions.Action0;
 import rx.schedulers.Schedulers;
 
+import com.memory.jmx.probe.GarbageCollectionProbe;
 import com.memory.jmx.probe.YoungGenSpaceProbe;
 import com.memory.probe.Probe;
 
@@ -35,7 +36,8 @@ public class YoungGenPeriodicObservable implements Probe{
 	 * @param  
      */
     public Observable<YoungGenOccupancy> getYoungGenCapacity() {
-    	
+    	GarbageCollectionProbe gcp = new GarbageCollectionProbe();
+    	gcp.getMemoryPool();
     	Optional<MemoryPoolMXBean> memoryPool = ygsp.getMemoryPool();
     	
     	MemoryUsage mu = null;

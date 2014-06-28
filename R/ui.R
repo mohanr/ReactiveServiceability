@@ -11,8 +11,9 @@ shinyUI(fluidPage(theme = "/shared/bootstrap/css/bootstrap.css",
     tabPanel("Generations",
       h3("Heap"),
     tabsetPanel(
-        tabPanel("Metaspace",showOutput("metaspace", "Morris")),
-        tabPanel("YoungGen",showOutput("younggen", "Morris"))
+        tabPanel("Metaspace",showOutput("metaspace", "highcharts")),
+        tabPanel("YoungGen",showOutput("younggen", "highcharts")),
+        tabPanel("Test",showOutput("test", "highcharts"))
     )
     ),
     tabPanel("Threads",
@@ -21,6 +22,10 @@ shinyUI(fluidPage(theme = "/shared/bootstrap/css/bootstrap.css",
     "-----",
     tabPanel("JIT",
       h3("Methods"),
+      tags$style(type="text/css",
+      ".shiny-output-error { visibility: hidden; }",
+      ".shiny-output-error:before { visibility: hidden; }"
+     ),
       showOutput("chart2", "nvd3")
     )
 )))

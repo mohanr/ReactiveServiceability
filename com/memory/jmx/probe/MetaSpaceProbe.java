@@ -1,25 +1,24 @@
 package com.memory.jmx.probe;
 
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryPoolMXBean;
-import java.net.MalformedURLException;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
+import java.util.Set;
 
-import javax.management.remote.JMXConnector;
-import javax.management.remote.JMXConnectorFactory;
-import javax.management.remote.JMXServiceURL;
+import javax.management.MBeanServerConnection;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
 
 import org.apache.log4j.Logger;
 
 import rx.Subscriber;
 
+import com.memory.probe.Probe;
 
-public class MetaSpaceProbe {
+
+public class MetaSpaceProbe implements Probe{
 	
 	Logger l = Logger.getLogger("generation.gc");
 
@@ -28,25 +27,25 @@ public class MetaSpaceProbe {
 	
 	public  Optional<MemoryPoolMXBean> getMemoryPool() {
 		
-      JMXServiceURL url;
-	try {
-		url = new JMXServiceURL(
-		            "service:jmx:rmi:///jndi/rmi://localhost:9010/jmxrmi");
-		JMXConnector jmxc = JMXConnectorFactory.connect(url, null);
-		l.debug("Remote JMX connection is successful");
-	} catch (IOException e) {
-		l.debug(getStackTrace(e));
-	}
-	
-	
+	   MBeanServerConnection mbs = connectJMXRemote(9010);
 	   Optional<MemoryPoolMXBean> mpx = Optional.empty();
-	   List<MemoryPoolMXBean> pools = ManagementFactory.getMemoryPoolMXBeans();
-	           for (MemoryPoolMXBean pool : pools) {
-	       		l.debug(pool.getName());
-	               if (pool.getName().equals(METASPACE)) {
-	            	   mpx =  Optional.ofNullable(pool);
-	               }
-	           }
+	   Set<ObjectName> pools;
+		try {
+			pools = mbs.queryNames(new ObjectName(ManagementFactory.MEMORY_POOL_MXBEAN_DOMAIN_TYPE + ",name=*"), null);
+	
+			   Set<MemoryPoolMXBean> memoryBeans = new HashSet<MemoryPoolMXBean>(pools.size());
+			   for(ObjectName o: pools) {
+					memoryBeans.add(ManagementFactory.newPlatformMXBeanProxy(mbs, o.toString(), MemoryPoolMXBean.class));
+			   }
+			   for (MemoryPoolMXBean pool : memoryBeans) {
+		       		l.debug(pool.getName());
+		               if (pool.getName().equals(METASPACE)) {
+		            	   mpx =  Optional.ofNullable(pool);
+		               }
+		   }
+		} catch (MalformedObjectNameException | IOException e) {
+			getTrace(e);
+		}
 			return mpx;
 	}
 
@@ -55,14 +54,4 @@ public class MetaSpaceProbe {
 		this.ob = ob;
 		
 	}
-	
-    private String getStackTrace(Throwable t){
-    	StringWriter sw = new StringWriter();
-    	PrintWriter pw = new PrintWriter(sw);
-    	t.printStackTrace(pw);
-    	return sw.toString();
-    	
-    }
-	
-
 }
